@@ -58,30 +58,17 @@
     <button id="console-btn">Buka Console</button>
 
     <script>
-    const SUPABASE_URL = "https://iafrlxyoeostvhnoywnv.supabase.co"; // Ganti dengan URL Supabase kamu
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhZnJseHlvZW9zdHZobm95d252Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1MzMwNjAsImV4cCI6MjA1NDEwOTA2MH0.WEdZeif209ew2iEWsGs9Y10529hDFI9BVdFvz_7Yeno"; // Ganti dengan API Key Supabase kamu
+    const SUPABASE_URL = "https://iafrlxyoeostvhnoywnv.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let supabase;
-
-    document.addEventListener("DOMContentLoaded", async () => {
-        // Pastikan Supabase diinisialisasi dengan benar
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        const { data, error } = await supabase.auth.getUser();
-        console.log("[DEBUG] User saat ini:", data, error);
-    });
-
-    // Fungsi Register
+    // Register dengan gamertag
     async function register() {
-        if (!supabase) {
-            console.error("Supabase belum diinisialisasi!");
-            return;
-        }
-
         const email = document.getElementById("register-email").value;
         const password = document.getElementById("register-password").value;
+        const gamertag = document.getElementById("register-gamertag").value;
 
-        console.log("[DEBUG] Mencoba register dengan email:", email);
+        console.log("[DEBUG] Mendaftar dengan email:", email, "dan gamertag:", gamertag);
 
         const { data, error } = await supabase.auth.signUp({ email, password });
 
@@ -90,22 +77,37 @@
             document.getElementById("register-message").textContent = "Register gagal: " + error.message;
         } else {
             console.log("[DEBUG] Register berhasil:", data);
+
+            // Simpan gamertag ke tabel "profiles"
+            await supabase.from("profiles").insert([{ id: data.user.id, email, gamertag }]);
+
             document.getElementById("register-message").textContent = "Register berhasil! Cek email untuk verifikasi.";
         }
     }
 
-    // Fungsi Login
+    // Login dengan email atau gamertag
     async function login() {
-        if (!supabase) {
-            console.error("Supabase belum diinisialisasi!");
-            return;
-        }
-
-        const email = document.getElementById("login-email").value;
+        const identifier = document.getElementById("login-identifier").value;
         const password = document.getElementById("login-password").value;
 
-        console.log("[DEBUG] Mencoba login dengan email:", email);
+        console.log("[DEBUG] Mencoba login dengan:", identifier);
 
+        let email = identifier;
+
+        // Jika user memasukkan gamertag, cari email dari database
+        if (!identifier.includes("@")) {
+            console.log("[DEBUG] Login menggunakan gamertag, mencari email...");
+            const { data, error } = await supabase.from("profiles").select("email").eq("gamertag", identifier).single();
+
+            if (error || !data) {
+                console.error("[ERROR] Gamertag tidak ditemukan.");
+                document.getElementById("login-message").textContent = "Gamertag tidak ditemukan.";
+                return;
+            }
+            email = data.email;
+        }
+
+        // Login dengan email yang sudah ditemukan
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
@@ -113,28 +115,24 @@
             document.getElementById("login-message").textContent = "Login gagal: " + error.message;
         } else {
             console.log("[DEBUG] Login berhasil:", data);
-            document.getElementById("login-message").textContent = "Login berhasil! Selamat datang.";
-        }
-    }
-
-    // Fungsi Logout
-    async function logout() {
-        if (!supabase) {
-            console.error("Supabase belum diinisialisasi!");
-            return;
-        }
-
-        console.log("[DEBUG] Mencoba logout...");
-        const { error } = await supabase.auth.signOut();
-
-        if (error) {
-            console.error("[ERROR] Logout gagal:", error.message);
-            document.getElementById("logout-message").textContent = "Logout gagal: " + error.message;
-        } else {
-            console.log("[DEBUG] Logout berhasil!");
-            document.getElementById("logout-message").textContent = "Logout berhasil!";
+            document.getElementById("login-message").textContent = "Login berhasil!";
         }
     }
 </script>
+
+<!-- FORM -->
+<h2>Register</h2>
+<input type="email" id="register-email" placeholder="Email">
+<input type="password" id="register-password" placeholder="Password">
+<input type="text" id="register-gamertag" placeholder="Gamertag">
+<button onclick="register()">Daftar</button>
+<p id="register-message"></p>
+
+<h2>Login</h2>
+<input type="text" id="login-identifier" placeholder="Email atau Gamertag">
+<input type="password" id="login-password" placeholder="Password">
+<button onclick="login()">Masuk</button>
+<p id="login-message"></p>
+    
 </body>
 </html>
