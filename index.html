@@ -58,56 +58,69 @@
     <button id="console-btn">Buka Console</button>
 
     <script>
-    const SUPABASE_URL = "https://iafrlxyoeostvhnoywnv.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+    const SUPABASE_URL = "https://iafrlxyoeostvhnoywnv.supabase.co"; // Ganti dengan URL Supabase kamu
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhZnJseHlvZW9zdHZobm95d252Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1MzMwNjAsImV4cCI6MjA1NDEwOTA2MH0.WEdZeif209ew2iEWsGs9Y10529hDFI9BVdFvz_7Yeno"; // Ganti dengan API Key Supabase kamu
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Register dengan gamertag
+    // Fungsi Register
     async function register() {
         const email = document.getElementById("register-email").value;
         const password = document.getElementById("register-password").value;
         const gamertag = document.getElementById("register-gamertag").value;
 
-        console.log("[DEBUG] Mendaftar dengan email:", email, "dan gamertag:", gamertag);
+        console.log("[DEBUG] Mencoba register dengan email:", email, "dan gamertag:", gamertag);
 
+        // Register ke Supabase Auth
         const { data, error } = await supabase.auth.signUp({ email, password });
 
         if (error) {
             console.error("[ERROR] Register gagal:", error.message);
             document.getElementById("register-message").textContent = "Register gagal: " + error.message;
+            return;
+        }
+
+        // Setelah berhasil register, tambahkan data ke tabel profiles
+        const { error: profileError } = await supabase
+            .from("profiles")
+            .insert([{ id: data.user.id, email, gamertag }]);
+
+        if (profileError) {
+            console.error("[ERROR] Gagal menambahkan ke profiles:", profileError.message);
+            document.getElementById("register-message").textContent = "Register berhasil, tapi gagal menyimpan profil.";
         } else {
-            console.log("[DEBUG] Register berhasil:", data);
-
-            // Simpan gamertag ke tabel "profiles"
-            await supabase.from("profiles").insert([{ id: data.user.id, email, gamertag }]);
-
+            console.log("[DEBUG] Register berhasil, profil disimpan.");
             document.getElementById("register-message").textContent = "Register berhasil! Cek email untuk verifikasi.";
         }
-    }
+                                                 }
 
     // Login dengan email atau gamertag
     async function login() {
-        const identifier = document.getElementById("login-identifier").value;
+        const loginInput = document.getElementById("login-input").value;
         const password = document.getElementById("login-password").value;
 
-        console.log("[DEBUG] Mencoba login dengan:", identifier);
+        console.log("[DEBUG] Mencoba login dengan:", loginInput);
 
-        let email = identifier;
+        let email = loginInput;
 
-        // Jika user memasukkan gamertag, cari email dari database
-        if (!identifier.includes("@")) {
-            console.log("[DEBUG] Login menggunakan gamertag, mencari email...");
-            const { data, error } = await supabase.from("profiles").select("email").eq("gamertag", identifier).single();
+        // Cek apakah input adalah gamertag
+        if (!loginInput.includes("@")) {
+            console.log("[DEBUG] Deteksi sebagai gamertag, mencari email...");
+            const { data, error } = await supabase
+                .from("profiles")
+                .select("email")
+                .eq("gamertag", loginInput)
+                .single();
 
-            if (error || !data) {
-                console.error("[ERROR] Gamertag tidak ditemukan.");
+            if (error) {
+                console.error("[ERROR] Gamertag tidak ditemukan:", error.message);
                 document.getElementById("login-message").textContent = "Gamertag tidak ditemukan.";
                 return;
             }
+
             email = data.email;
         }
 
-        // Login dengan email yang sudah ditemukan
+        // Login pakai email yang ditemukan
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
@@ -115,7 +128,7 @@
             document.getElementById("login-message").textContent = "Login gagal: " + error.message;
         } else {
             console.log("[DEBUG] Login berhasil:", data);
-            document.getElementById("login-message").textContent = "Login berhasil!";
+            document.getElementById("login-message").textContent = "Login berhasil! Selamat datang.";
         }
     }
 </script>
