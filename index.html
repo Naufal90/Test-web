@@ -58,82 +58,83 @@
     <button id="console-btn">Buka Console</button>
 
     <script>
-        // Konfigurasi Supabase
-        const SUPABASE_URL = "https://iafrlxyoeostvhnoywnv.supabase.co"; // Ganti dengan URL Supabase kamu
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhZnJseHlvZW9zdHZobm95d252Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1MzMwNjAsImV4cCI6MjA1NDEwOTA2MH0.WEdZeif209ew2iEWsGs9Y10529hDFI9BVdFvz_7Yeno"; // Ganti dengan API Key Supabase kamu
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL = "https://iafrlxyoeostvhnoywnv.supabase.co"; // Ganti dengan URL Supabase kamu
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhZnJseHlvZW9zdHZobm95d252Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1MzMwNjAsImV4cCI6MjA1NDEwOTA2MH0.WEdZeif209ew2iEWsGs9Y10529hDFI9BVdFvz_7Yeno"; // Ganti dengan API Key Supabase kamu
 
-        // Fungsi Register
-        async function register() {
-            const email = document.getElementById("register-email").value;
-            const password = document.getElementById("register-password").value;
+    let supabase;
 
-            console.log("[DEBUG] Mencoba register dengan email:", email);
-            
-            const { data, error } = await supabase.auth.signUp({ email, password });
+    document.addEventListener("DOMContentLoaded", async () => {
+        // Pastikan Supabase diinisialisasi dengan benar
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            if (error) {
-                console.error("[ERROR] Register gagal:", error.message);
-                document.getElementById("register-message").textContent = "Register gagal: " + error.message;
-            } else {
-                console.log("[DEBUG] Register berhasil:", data);
-                document.getElementById("register-message").textContent = "Register berhasil! Cek email untuk verifikasi.";
-            }
+        const { data, error } = await supabase.auth.getUser();
+        console.log("[DEBUG] User saat ini:", data, error);
+    });
+
+    // Fungsi Register
+    async function register() {
+        if (!supabase) {
+            console.error("Supabase belum diinisialisasi!");
+            return;
         }
 
-        // Fungsi Login
-        async function login() {
-            const email = document.getElementById("login-email").value;
-            const password = document.getElementById("login-password").value;
+        const email = document.getElementById("register-email").value;
+        const password = document.getElementById("register-password").value;
 
-            console.log("[DEBUG] Mencoba login dengan email:", email);
-            
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        console.log("[DEBUG] Mencoba register dengan email:", email);
 
-            if (error) {
-                console.error("[ERROR] Login gagal:", error.message);
-                document.getElementById("login-message").textContent = "Login gagal: " + error.message;
-            } else {
-                console.log("[DEBUG] Login berhasil:", data);
-                document.getElementById("login-message").textContent = "Login berhasil! Selamat datang.";
-            }
+        const { data, error } = await supabase.auth.signUp({ email, password });
+
+        if (error) {
+            console.error("[ERROR] Register gagal:", error.message);
+            document.getElementById("register-message").textContent = "Register gagal: " + error.message;
+        } else {
+            console.log("[DEBUG] Register berhasil:", data);
+            document.getElementById("register-message").textContent = "Register berhasil! Cek email untuk verifikasi.";
+        }
+    }
+
+    // Fungsi Login
+    async function login() {
+        if (!supabase) {
+            console.error("Supabase belum diinisialisasi!");
+            return;
         }
 
-        // Fungsi Logout
-        async function logout() {
-            console.log("[DEBUG] Mencoba logout...");
-            const { error } = await supabase.auth.signOut();
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
 
-            if (error) {
-                console.error("[ERROR] Logout gagal:", error.message);
-                document.getElementById("logout-message").textContent = "Logout gagal: " + error.message;
-            } else {
-                console.log("[DEBUG] Logout berhasil!");
-                document.getElementById("logout-message").textContent = "Logout berhasil!";
-            }
+        console.log("[DEBUG] Mencoba login dengan email:", email);
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+        if (error) {
+            console.error("[ERROR] Login gagal:", error.message);
+            document.getElementById("login-message").textContent = "Login gagal: " + error.message;
+        } else {
+            console.log("[DEBUG] Login berhasil:", data);
+            document.getElementById("login-message").textContent = "Login berhasil! Selamat datang.";
+        }
+    }
+
+    // Fungsi Logout
+    async function logout() {
+        if (!supabase) {
+            console.error("Supabase belum diinisialisasi!");
+            return;
         }
 
-        // Fungsi untuk membuka console di Android
-        document.getElementById("console-btn").addEventListener("click", function() {
-            const script = document.createElement("script");
-            script.src = "https://cdn.jsdelivr.net/npm/eruda";
-            document.body.appendChild(script);
-            script.onload = function() {
-                eruda.init();
-                console.log("[DEBUG] Console F12 aktif!");
-            };
-        });
+        console.log("[DEBUG] Mencoba logout...");
+        const { error } = await supabase.auth.signOut();
 
-        // Debug: Cek apakah Supabase berhasil terhubung
-        document.addEventListener("DOMContentLoaded", async () => {
-            const { data, error } = await supabase.auth.getUser();
-            if (error) {
-                console.error("[ERROR] Gagal mendapatkan user:", error.message);
-            } else {
-                console.log("[DEBUG] User saat ini:", data);
-            }
-        });
-    </script>
-
+        if (error) {
+            console.error("[ERROR] Logout gagal:", error.message);
+            document.getElementById("logout-message").textContent = "Logout gagal: " + error.message;
+        } else {
+            console.log("[DEBUG] Logout berhasil!");
+            document.getElementById("logout-message").textContent = "Logout berhasil!";
+        }
+    }
+</script>
 </body>
 </html>
