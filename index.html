@@ -61,15 +61,20 @@
 const SUPABASE_URL = "https://iafrlxyoeostvhnoywnv.supabase.co"; // Ganti dengan URL Supabase kamu
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhZnJseHlvZW9zdHZobm95d252Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1MzMwNjAsImV4cCI6MjA1NDEwOTA2MH0.WEdZeif209ew2iEWsGs9Y10529hDFI9BVdFvz_7Yeno"; // Ganti dengan API Key Supabase kamu
 
-let supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Buat instance Supabase
+const supabase = window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const { data, error } = await supabase.auth.getUser();
-    
-    if (error) {
-        console.error("[ERROR] Gagal mendapatkan user:", error.message);
-    } else {
-        console.log("[DEBUG] User saat ini:", data);
+    try {
+        const { data, error } = await supabase.auth.getUser();
+        
+        if (error) {
+            console.error("[ERROR] Gagal mendapatkan user:", error.message);
+        } else {
+            console.log("[DEBUG] User saat ini:", data);
+        }
+    } catch (e) {
+        console.error("[ERROR] Terjadi kesalahan:", e);
     }
 });
 
