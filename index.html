@@ -18,35 +18,65 @@
     <button onclick="login()">Login</button>
     <p id="loginMsg"></p>
 
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
     <script>
-        const API_URL = "http://node-1.panelphyzx.my.id:3000"; // Ganti dengan domain backend kamu
+        const API_URL = "http://node-1.panelphyzx.my.id:3000"; // Ganti dengan domain backend jika dihosting
+
+        function logDebug(message) {
+            console.log(`[DEBUG] ${new Date().toISOString()} - ${message}`);
+        }
 
         async function register() {
             const username = document.getElementById("regUsername").value;
             const password = document.getElementById("regPassword").value;
             
-            const res = await fetch(`${API_URL}/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            });
+            logDebug(`Mencoba register dengan username: ${username}`);
+            
+            try {
+                const res = await fetch(`${API_URL}/register`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
+                });
 
-            const data = await res.json();
-            document.getElementById("regMsg").innerText = data.message;
+                const data = await res.json();
+                document.getElementById("regMsg").innerText = data.message;
+
+                if (res.ok) {
+                    logDebug("Registrasi berhasil");
+                } else {
+                    logDebug(`Registrasi gagal: ${data.message}`);
+                }
+            } catch (error) {
+                logDebug(`Error saat register: ${error}`);
+            }
         }
 
         async function login() {
             const username = document.getElementById("loginUsername").value;
             const password = document.getElementById("loginPassword").value;
-            
-            const res = await fetch(`${API_URL}/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            });
 
-            const data = await res.json();
-            document.getElementById("loginMsg").innerText = data.message;
+            logDebug(`Mencoba login dengan username: ${username}`);
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await res.json();
+                document.getElementById("loginMsg").innerText = data.message;
+
+                if (res.ok) {
+                    logDebug("Login berhasil");
+                } else {
+                    logDebug(`Login gagal: ${data.message}`);
+                }
+            } catch (error) {
+                logDebug(`Error saat login: ${error}`);
+            }
         }
     </script>
 </body>
